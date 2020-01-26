@@ -1,18 +1,24 @@
 import React, { Component } from 'react';
 import './App.css';
 import Movie from './Movie';
-
+import Map from './Map';
+import { fire } from './Firebase';
+import { Route, BrowserRouter } from 'react-router-dom';
 
 
 
 class App extends Component {
+  constructor() {
+    super();
+    fire(); // 파이어베이스 실행
+  }
 
   state = {
    
   }
 
   componentDidMount() {
-    this._getMovies();
+    //this._getMovies();
   }
 
   
@@ -44,9 +50,10 @@ class App extends Component {
   render() {
     return (
       
-    <div className={this.state.movies ? "App" : "App--loading"}>
-      {this.state.movies ? this._renderMovies() : 'Loading'}
-      
+    <div className="App">
+       <BrowserRouter>
+          <Route exact path="/" component={Map} />
+        </BrowserRouter>
     </div>
     );
   }
