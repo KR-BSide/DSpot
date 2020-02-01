@@ -45,7 +45,7 @@ class Map extends Component {
         });
     }
 
-    _callSubwayCategoryApi = ({dSpotlat, dSpotlot, category}) => {
+    _callSubwayCategoryApi = async ({ dSpotlat, dSpotlot, category }) => {
         var url = "https://apis.openapi.sk.com/tmap/pois/search/around?version=1&"
         var params = {
             "categories" : category,

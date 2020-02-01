@@ -41,7 +41,7 @@ class App extends Component {
     })
   }
 
-  _callApi = () => {
+  _callApi = async () => {
     return fetch("https://yts.lt/api/v2/list_movies.json?sort_by=rating")
     .then(response => response.json())
     .then(json => json.data.movies)
