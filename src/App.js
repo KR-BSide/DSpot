@@ -1,10 +1,11 @@
-import React, { Component } from 'react';
 import './App.css';
-import Movie from './Movie';
-import Map from './Map';
-import { fire } from './Firebase';
+
+import React, { Component } from 'react';
 import { Route, BrowserRouter } from 'react-router-dom';
-import SharingPage from './Pages/SharingPage';
+
+import { Movie } from './Components/Movie';
+import { fire } from './Utils/Firebase';
+import { SharingPage } from './Pages/SharingPage';
 
 class App extends Component {
   constructor() {
