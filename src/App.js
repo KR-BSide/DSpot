@@ -3,9 +3,10 @@ import './App.css';
 import React, { Component } from 'react';
 import { Route, BrowserRouter } from 'react-router-dom';
 
-import { Movie } from './Components/Movie';
 import { fire } from './Utils/Firebase';
-import { SharingPage } from './Pages/SharingPage';
+
+import SharingPage from './Pages/SharingPage';
+import MapPage from './Pages/MapPage';
 
 class App extends Component {
   constructor() {
@@ -29,7 +30,8 @@ class App extends Component {
     return (
       <div className="App">
         <BrowserRouter>
-          <Route exact path="/" component={Map} />
+          <Route exact path="/" component={MapPage} />
+          <Route exact path="/sharing" component={SharingPage} />
         </BrowserRouter>
       </div>
     );
