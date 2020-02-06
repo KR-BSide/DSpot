@@ -12,7 +12,7 @@ class App extends Component {
   constructor() {
     super();
     fire(); // 파이어베이스 실행
-    this._initializeKakaoEnv();
+   // this._initializeKakaoEnv();
   }
 
   state = {
