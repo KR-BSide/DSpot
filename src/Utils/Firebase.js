@@ -12,14 +12,53 @@ let config = {
     measurementId: "G-0MGJTNB98E"}
 
 
+
 export const fire = () => {
     if (!firebase.apps.length) {
         firebase.initializeApp(config);
       }
         database = firebase.database();  
         const auth = firebase.auth();      
+        var provider = new firebase.auth.GoogleAuthProvider();
+        firebase.auth().signInWithPopup(provider).then(function(result) {
+          // This gives you a Google Access Token. You can use it to access the Google API.
+          var token = result.credential.accessToken;
+          // The signed-in user info.
+          var user = result.user;
+          // ...
+        }).catch(function(error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // The email of the user's account used.
+          var email = error.email;
+          // The firebase.auth.AuthCredential type that was used.
+          var credential = error.credential;
+          // ...
+        });
+        //auth.signInWithRedirect(provider);
+        /*auth.getRedirectResult().then(function(result) {
+          console.log(result);
+          if (result.credential) {
+            // This gives you a Google Access Token. You can use it to access the Google API.
+            var token = result.credential.accessToken;
+            // ...
+          }
+          // The signed-in user info.
+          var user = result.user;
+        }).catch(function(error) {
+          // Handle Errors here.
+          var errorCode = error.code;
+          var errorMessage = error.message;
+          // The email of the user's account used.
+          var email = error.email;
+          // The firebase.auth.AuthCredential type that was used.
+          var credential = error.credential;
+          // ...
+        });*/
+
   //익명로그인
-  auth.signInAnonymously().catch(function(error) {
+  /*auth.signInAnonymously().catch(function(error) {
       console.log(error.code);
       console.log(error.mesagge);
   });
@@ -37,6 +76,6 @@ export const fire = () => {
       // ...
     }
     // ...
-  });
+  });*/
 
 }
