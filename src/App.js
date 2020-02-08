@@ -1,50 +1,62 @@
-import './css/App.css';
-
 import React, { Component } from 'react';
+import './App.css';
+import Movie from './Movie';
+import Map from './Map';
+import { fire } from './Firebase';
 import { Route, BrowserRouter } from 'react-router-dom';
 
-import './Utils/Firebase';
-//import authentication from './Utils/authentication';
-
-import SharingPage from './Pages/SharingPage';
-import MapPage from './Pages/MapPage';
-import RegisterMemberPage from './Pages/RegisterMemberPage';
-import FirstPage from './Pages/FirstPage';
-import RegisterGroupPage from './Pages/RegisterGroupPage'
 
 
 class App extends Component {
   constructor() {
     super();
-    this._initializeKakaoEnv();
-    //authentication.signInWithPopup()
-    //.then(value => console.log(value));
+    fire(); // 파이어베이스 실행
   }
 
   state = {
-  }
-
-  _initializeKakaoEnv() {
-    window.Kakao.init('65043e1c13a4590368f0053d44c9940e');
+   
   }
 
   componentDidMount() {
     //this._getMovies();
   }
 
+  
+  _renderMovies = () => {
+    const movies = this.state.movies.map(movie=> {
+      return <Movie 
+      title={movie.title_english} 
+      poster ={movie.medium_cover_image} 
+      key={movie.id} 
+      genres={movie.genres}
+      synopsis={movie.synopsis} />
+    })
+    return movies
+  }
+
+  _getMovies = async () => {
+    const movies = await this._callApi();
+    this.setState({
+      movies
+    })
+  }
+
+  _callApi = async () => {
+    return fetch("https://yts.lt/api/v2/list_movies.json?sort_by=rating")
+    .then(response => response.json())
+    .then(json => json.data.movies)
+    .catch(err => console.log(err));
+  }
   render() {
     return (
-      <div className="App">
-        <BrowserRouter>
-          <Route exact path="/" component={FirstPage} />
-          <Route exact path="/group" component={RegisterGroupPage}/>
-          <Route exact path="/member" component={RegisterMemberPage} />
-          <Route exact path="/map" component={MapPage} />
-          <Route exact path="/sharing" component={SharingPage} />
+      
+    <div className="App">
+       <BrowserRouter>
+          <Route exact path="/" component={Map} />
         </BrowserRouter>
-      </div>
+    </div>
     );
   }
-}
+}                                        
 
 export default App;
