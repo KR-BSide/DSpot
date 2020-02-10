@@ -3,7 +3,8 @@ import './css/App.css';
 import React, { Component } from 'react';
 import { Route, BrowserRouter } from 'react-router-dom';
 
-import { fire } from './Utils/Firebase';
+import './Utils/Firebase';
+import authentication from './Utils/authentication';
 
 import SharingPage from './Pages/SharingPage';
 import MapPage from './Pages/MapPage';
@@ -11,8 +12,9 @@ import MapPage from './Pages/MapPage';
 class App extends Component {
   constructor() {
     super();
-    fire(); // 파이어베이스 실행
-   // this._initializeKakaoEnv();
+    // this._initializeKakaoEnv();
+    authentication.signInWithPopup()
+    .then(value => console.log(value));
   }
 
   state = {
