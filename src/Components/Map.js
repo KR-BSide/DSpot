@@ -14,13 +14,17 @@ let resultMarker = [];
 let routDetailArr = [];
 class Map extends Component {
 
+
     componentDidMount() {
         this._getMap();
+        console.log(this.props)
     }
 
     state = {
-        route_detail : ""
+        routeDetails : []
     }
+
+    
 
     _getMap = () => {
         map = new window.Tmapv2.Map("map_div", { // 지도가 생성될 div
@@ -41,9 +45,23 @@ class Map extends Component {
     _getSubway = async ({ dSpotlat, dSpotlng }) => {
         const searchPoiInfo = await this._callSubwayCategoryApi({ dSpotlat, dSpotlng, category: "지하철;" });
         subways = searchPoiInfo.pois.poi;
-        subways.map(async (subway, index) => {
-            await this._callCafeCategoryApi({ dSpotlat: parseFloat(subway.frontLat), dSpotlng: parseFloat(subway.frontLon), category: "스터디카페;카페;", i: index });
+        subways.map((subway, index) => {
+            this._callCafeCategoryApi({ dSpotlat: parseFloat(subway.frontLat), dSpotlng: parseFloat(subway.frontLon), category: "스터디카페;카페;", i: index })
+            .then (result => {
+                if (result) {
+                    const totalCount = result.searchPoiInfo.totalCount;
+                    totalList.push({ totalCount: totalCount, index: index });
+                    subways[index].cafes = result.searchPoiInfo    
+                    if (subways.length == totalList.length) {
+                        totalList.sort(function (a, b) { // 오름차순
+                            return b["totalCount"] - a["totalCount"];
+                        });
+                        this._createDSpot(0);
+                    }
+                }
+            });
         });
+        
     }
 
     _callSubwayCategoryApi = async ({ dSpotlat, dSpotlng, category }) => {
@@ -85,11 +103,14 @@ class Map extends Component {
             .map(k => esc(k) + '=' + esc(params[k]))
             .join('&');
         const response = await fetch(url + query)
-            .catch(err => console.log(err));
+            .catch(err => {
+                console.log(err);
+                return;
+            });
         const responseOk = response && response.ok;
         if (responseOk) {
-            const result = await response.json();
-            const totalCount = result.searchPoiInfo.totalCount;
+            return await response.json();
+            /*const totalCount = result.searchPoiInfo.totalCount;
             totalList.push({ totalCount: totalCount, index: i });
             subways[i].cafes = result.searchPoiInfo
             if (subways.length == totalList.length) {
@@ -97,7 +118,7 @@ class Map extends Component {
                     return b["totalCount"] - a["totalCount"];
                 });
                 this._createDSpot(0);
-            }
+            }*/
         }
     }
 
@@ -110,8 +131,8 @@ class Map extends Component {
         });
         resultMarker.push(marker);
         for (var i in userLocationArr)
-            this._routeDSpot(i,j);
-        
+            this._routeDSpot(i,j)
+            
     }
 
     _routeDSpot = async(i,j) => {
@@ -152,14 +173,9 @@ class Map extends Component {
 
     _setRoute = (result) => {
         
-        var tDistance = "총 거리 : " + (result[0].properties.totalDistance / 1000).toFixed(1) + "km,";
-        var tTime = " 총 시간 : " + (result[0].properties.totalTime / 60).toFixed(0) + "분,";
-        // var tFare = " 총 요금 : " + result[0].properties.totalFare + "원,";
-        // var taxiFare = " 예상 택시 요금 : " + result[0].properties.taxiFare + "원";
-        
-        const routeDetail = tDistance +  tTime;
-        routDetailArr.push(routeDetail);
-        
+        const tDistance = (result[0].properties.totalDistance / 1000).toFixed(1);
+        const tTime = (result[0].properties.totalTime / 60).toFixed(0);
+        this._addRouteDetail({distance : tDistance, time : tTime});
         for (var i in result) {
             var geometry = result[i].geometry;
             var properties = result[i].properties;
@@ -175,17 +191,15 @@ class Map extends Component {
                         latlng.x); 
                     sectionInfos.push(convertChange);
                 }
-
                 const poli = new window.Tmapv2.Polyline({
                     path : sectionInfos,
                     strokeColor : "#DD0000",
                     strokeWeight : 6,
                     map : map
                 });
-                resultdrawArr.push(poli);
-        
+                resultdrawArr.push(poli);  
             } else {
-		
+        
                 var markerImg = "";
                 var pType = "";
 
@@ -212,7 +226,7 @@ class Map extends Component {
                     markerImage : markerImg,
                     lng : latlon.x,
                     lat : latlon.y
-                   // pointType : pType
+                // pointType : pType
                 };
                 // 마커 추가
                 //addMarker(routeInfoObj);
@@ -221,8 +235,18 @@ class Map extends Component {
 
             
         }
+        
     }
-
+    _addRouteDetail = ({distance, time}) => {
+        const {routeDetails} = this.state;
+        this.setState({
+            routeDetails : routeDetails.concat({
+                distance : distance,
+                time : time
+            })
+        });
+        
+    }
     _getLocation = (locationObj) => {
         let latList = [];
         let lngList = [];
@@ -252,36 +276,66 @@ class Map extends Component {
             return;
         }
 
-        if (resultMarker.length > 0) {
-            for (var i = 0; i< resultMarker.length; i++) {
-                resultMarker[i].setMap(null);
-            }
-        }
-
-        resultMarker = [];
-
-        if (resultdrawArr.length > 0) {
-            for (var i = 0; i < resultdrawArr.length; i++) {
-                resultdrawArr[i].setMap(null);
-            }
-        }
-
+        this._resetList(resultMarker);
+        this._resetList(resultdrawArr);
+        this._resetRouteDetail();
         resultdrawArr = []; // 라인 초기화
+        resultMarker = []; // dSpot 초기화
         this._createDSpot(nextIndex);
     }
 
 
     _resetMap = () => {
+        this._resetList(resultMarker);
+        this._resetList(resultdrawArr);
+        this._resetList(markers);
+        this._resetRouteDetail();
+
+        resultMarker = [];
+        resultdrawArr = [];
+        markers = [];
     }
 
+    _resetList = (list) => {
+        if (list.length > 0) {
+            for (var i = 0; i < list.length; i++)
+                list[i].setMap(null);
+        }
+    }
+
+    _resetRouteDetail = () => {
+        const {routeDetails} = this.state;
+        this.setState({
+            routeDetails : []
+        });
+    }
     render() {
+        const {routeDetails} = this.state;
+        const list = routeDetails.map(
+            ({distance, time}, index) => (
+            <li key={index}>
+                <p>
+                    <span>거리 : </span>
+                    <span>{distance}km</span>
+                </p>
+                <p>
+                    <span>소요시간 : </span>
+                    <span>{time}분</span>
+                </p>
+            </li>
+            )
+        );
+
         return (
             <div>
                 <div id="map_div"></div>
                 <button onClick={() => this._getSpot()}>중간지점</button>
                 <button onClick={() => this._nextSpot()}>다른 역 찾기</button>
                 <button onClick={() => this._resetMap()}>처음부터 다시</button>
-                <div>{this.state.route_detail}</div>
+                <hr/>
+                <div>
+                    <ul>{list}</ul>
+                </div>
             </div>
         )
     };
