@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Button from '@material-ui/core/Button/Button';
 import RegisterMember from '../Components/RegisterMember';
 
 class RegisterMemberPage extends Component {
@@ -6,11 +7,7 @@ class RegisterMemberPage extends Component {
     render() {
         return (
             <div>
-                <div style={{ backgroundColor: "red" }}>Decide Spot</div>
-                <div>
-                    <button>등록하기</button>
-                </div>
-                <div>Group Name</div>
+                <div style={{ backgroundColor: "lightblue" }}>Decide Spot</div>
                 <div>
                     <RegisterMember />
                 </div>

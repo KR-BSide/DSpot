@@ -2,7 +2,6 @@ import React, { Component } from 'react';
 import KakaoLink from '../Components/KakaoLink'
 import Map from '../Components/Map'
 import Step from '../Components/Step'
-import RegisterMember from '../Components/RegisterMember'
 
 class SharingPage extends Component {
 

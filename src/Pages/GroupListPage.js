@@ -1,19 +1,19 @@
 import React, { Component } from 'react';
-import RegisterGroup from '../Components/RegisterGroup';
+import GroupList from '../Components/GroupList';
 
 
-class RegisterGroupPage extends Component {
+class GroupListPage extends Component {
 
     render() {
         return (
             <div>
                 <div style={{ backgroundColor: "lightblue" }}>Decide Spot</div>
                 <div> 
-                    <RegisterGroup />
+                    <GroupList />
                 </div>
             </div>
         );
     }
 }
 
-export default RegisterGroupPage;
+export default GroupListPage;

@@ -1,19 +1,19 @@
 import React, { Component } from 'react';
-import RegisterGroup from '../Components/RegisterGroup';
+import MemberList from '../Components/MemberList';
 
 
-class RegisterGroupPage extends Component {
+class OneTimeMeetingPage extends Component {
 
     render() {
         return (
             <div>
                 <div style={{ backgroundColor: "lightblue" }}>Decide Spot</div>
                 <div> 
-                    <RegisterGroup />
+                    <MemberList />
                 </div>
             </div>
         );
     }
 }
 
-export default RegisterGroupPage;
+export default OneTimeMeetingPage;

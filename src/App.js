@@ -11,6 +11,9 @@ import MapPage from './Pages/MapPage';
 import RegisterMemberPage from './Pages/RegisterMemberPage';
 import FirstPage from './Pages/FirstPage';
 import RegisterGroupPage from './Pages/RegisterGroupPage'
+import OneTimeMeetingPage from './Pages/OneTimeMeetingPage';
+import GroupListPage from './Pages/GroupListPage';
+import AddGroupPage from './Pages/AddGroupPage';
 
 
 class App extends Component {
@@ -37,8 +40,11 @@ class App extends Component {
       <div className="App">
         <BrowserRouter>
           <Route exact path="/" component={FirstPage} />
-          <Route exact path="/group" component={RegisterGroupPage}/>
+          <Route exact path="/registerGroup" component={RegisterGroupPage}/>
+          <Route exact path="/addGroup" component={AddGroupPage}/>
+          <Route exact path="/groupList" component={GroupListPage}/>
           <Route exact path="/member" component={RegisterMemberPage} />
+          <Route exact path="/oneTimeMeeting" component={OneTimeMeetingPage} />
           <Route exact path="/map" component={MapPage} />
           <Route exact path="/sharing" component={SharingPage} />
         </BrowserRouter>
