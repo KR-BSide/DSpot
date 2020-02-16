@@ -5,7 +5,7 @@ var map;
 var markers = [];
 var subways = [];
 var totalList = [];
-var nextIndex = 0;
+var spotIndex = 0;
 
 const userLocationArr = [];
 const chktraffic = [];
@@ -17,14 +17,11 @@ class Map extends Component {
 
     componentDidMount() {
         this._getMap();
-        console.log(this.props)
     }
 
     state = {
         routeDetails : []
     }
-
-    
 
     _getMap = () => {
         map = new window.Tmapv2.Map("map_div", { // 지도가 생성될 div
@@ -56,7 +53,7 @@ class Map extends Component {
                         totalList.sort(function (a, b) { // 오름차순
                             return b["totalCount"] - a["totalCount"];
                         });
-                        this._createDSpot(0);
+                        this._createDSpot();
                     }
                 }
             });
@@ -110,20 +107,19 @@ class Map extends Component {
         const responseOk = response && response.ok;
         if (responseOk) {
             return await response.json();
-            /*const totalCount = result.searchPoiInfo.totalCount;
-            totalList.push({ totalCount: totalCount, index: i });
-            subways[i].cafes = result.searchPoiInfo
-            if (subways.length == totalList.length) {
-                totalList.sort(function (a, b) { // 오름차순
-                    return b["totalCount"] - a["totalCount"];
-                });
-                this._createDSpot(0);
-            }*/
         }
     }
 
-    _createDSpot(j) {
-        const index = totalList[j].index
+    _createDSpot() {
+        if (totalList.length <= spotIndex) {
+            alert("다음 검색 위치가 없습니다. 처음부터 다시 시작해주세요."); return;
+        } 
+
+        // 지도 라인 초기화
+        if (spotIndex != 0) 
+            this._initRoute();
+
+        const index = totalList[spotIndex].index
         const marker = new window.Tmapv2.Marker({
             position: new window.Tmapv2.LatLng(subways[index].frontLat, subways[index].frontLon), //Marker의 중심좌표 설정.
             icon: 'http://tmapapis.sktelecom.com/upload/tmap/marker/pin_b_m_b.png', //Marker의 아이콘.
@@ -131,15 +127,22 @@ class Map extends Component {
         });
         resultMarker.push(marker);
         for (var i in userLocationArr)
-            this._routeDSpot(i,j)
+            this._routeDSpot(i)
             
     }
 
-    _routeDSpot = async(i,j) => {
+    _initRoute = () => {
+        this._resetList(resultMarker);
+        this._resetList(resultdrawArr);
+        this._resetRouteDetail();
+        resultdrawArr = []; 
+        resultMarker = [];
+    }
+    _routeDSpot = async(i) => {
         const startX = userLocationArr[i].lng;
         const startY = userLocationArr[i].lat;
-        const endX = subways[totalList[j].index].frontLon;
-        const endY = subways[totalList[j].index].frontLat;
+        const endX = subways[totalList[spotIndex].index].frontLon;
+        const endY = subways[totalList[spotIndex].index].frontLat;
         const header = {
             appKey : "l7xxbfb4b13f846e43b8b0924bbda1166055"            
         };
@@ -226,17 +229,11 @@ class Map extends Component {
                     markerImage : markerImg,
                     lng : latlon.x,
                     lat : latlon.y
-                // pointType : pType
-                };
-                // 마커 추가
-                //addMarker(routeInfoObj);
-                
-            }
-
-            
-        }
-        
+                };                
+            }  
+        }    
     }
+
     _addRouteDetail = ({distance, time}) => {
         const {routeDetails} = this.state;
         this.setState({
@@ -245,8 +242,8 @@ class Map extends Component {
                 time : time
             })
         });
-        
     }
+
     _getLocation = (locationObj) => {
         let latList = [];
         let lngList = [];
@@ -270,18 +267,8 @@ class Map extends Component {
     }
     
     _nextSpot = () => {
-        nextIndex++;
-        if (totalList.length <= nextIndex) {
-            alert("다른역 없습니다.");
-            return;
-        }
-
-        this._resetList(resultMarker);
-        this._resetList(resultdrawArr);
-        this._resetRouteDetail();
-        resultdrawArr = []; // 라인 초기화
-        resultMarker = []; // dSpot 초기화
-        this._createDSpot(nextIndex);
+        spotIndex++ 
+        this._createDSpot();
     }
 
 
@@ -290,10 +277,10 @@ class Map extends Component {
         this._resetList(resultdrawArr);
         this._resetList(markers);
         this._resetRouteDetail();
-
         resultMarker = [];
         resultdrawArr = [];
         markers = [];
+        spotIndex=0;
     }
 
     _resetList = (list) => {
@@ -342,14 +329,11 @@ class Map extends Component {
 }
 
 function getLonlat(e) {
-    //Marker 객체 생성.
     addMarker({ lat : e.latLng.lat() , lng : e.latLng.lng()});
     userLocationArr.push({ lat : e.latLng.lat() , lng : e.latLng.lng()});
-
 }
 
 function addMarker(infoObj) {
-    //Marker 객체 생성.
     if (!infoObj.markerImage) {
         infoObj.markerImage = "http://tmapapis.sktelecom.com/upload/tmap/marker/pin_b_m_a.png"
     }
