@@ -11,7 +11,7 @@ class AddGroup extends Component{
                 <div>D-spot을 이용하세요 :) </div>
                 <div>
                     <b>등록하기</b>
-                    <IconButton color="primary" aria-label="add" href="/groupList">
+                    <IconButton color="primary" aria-label="add" href="/registerMember">
                         <AddCircleOutlineRoundedIcon />
                     </IconButton>
                 </div>

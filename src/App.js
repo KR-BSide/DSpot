@@ -43,7 +43,7 @@ class App extends Component {
           <Route exact path="/registerGroup" component={RegisterGroupPage}/>
           <Route exact path="/addGroup" component={AddGroupPage}/>
           <Route exact path="/groupList" component={GroupListPage}/>
-          <Route exact path="/member" component={RegisterMemberPage} />
+          <Route exact path="/registerMember" component={RegisterMemberPage} />
           <Route exact path="/oneTimeMeeting" component={OneTimeMeetingPage} />
           <Route exact path="/map" component={MapPage} />
           <Route exact path="/sharing" component={SharingPage} />
