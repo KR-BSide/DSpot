@@ -8,7 +8,7 @@ import authentication from './Utils/authentication';
 
 import SharingPage from './Pages/SharingPage';
 import MapPage from './Pages/MapPage';
-
+import RecommendPage from './Pages/RecommendPage';
 class App extends Component {
   constructor() {
     super();
@@ -34,6 +34,7 @@ class App extends Component {
         <BrowserRouter>
           <Route exact path="/" component={MapPage} />
           <Route exact path="/sharing" component={SharingPage} />
+          <Route exact path="/recommend" component={RecommendPage} />
         </BrowserRouter>
       </div>
     );

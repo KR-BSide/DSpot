@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
+import { withRouter } from 'react-router-dom';
 
 var map;
 var markers = [];
@@ -11,7 +12,6 @@ const userLocationArr = [];
 const chktraffic = [];
 let resultdrawArr = [];
 let resultMarker = [];
-let routDetailArr = [];
 class Map extends Component {
 
 
@@ -296,6 +296,19 @@ class Map extends Component {
             routeDetails : []
         });
     }
+
+    _decideSpot = () => {
+        if (subways.length == 0 || totalList.length == 0) {
+            alert("장소 값이 없어요");
+            return; 
+        }
+
+        var dSpot = subways[totalList[spotIndex].index];
+        console.log(dSpot);
+        console.log(this.props);
+        this.props.history.push('/recommend', {param : dSpot});
+       
+    }
     render() {
         const {routeDetails} = this.state;
         const list = routeDetails.map(
@@ -319,6 +332,7 @@ class Map extends Component {
                 <button onClick={() => this._getSpot()}>중간지점</button>
                 <button onClick={() => this._nextSpot()}>다른 역 찾기</button>
                 <button onClick={() => this._resetMap()}>처음부터 다시</button>
+                <button onClick={() => this._decideSpot()}>선택</button>
                 <hr/>
                 <div>
                     <ul>{list}</ul>
@@ -346,4 +360,4 @@ function addMarker(infoObj) {
     markers.push(marker);
 }
 
-export default Map;
+export default withRouter(Map);
