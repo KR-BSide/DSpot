@@ -12,8 +12,8 @@ class FirstPage extends Component {
     
     
     googlelogin(){
-        authentication.signInWithPopup()
-        .then(value => console.log(value))
+        //authentication.signInWithPopup()
+        //.then(value => console.log(value))
         console.log("google Log-in!!!!")     
     }
 
@@ -25,7 +25,7 @@ class FirstPage extends Component {
         return (
             <div>
                 <Intro />
-                <Button variant="outlined" color="primary" href="/registerGroup" onClick={this.googlelogin}>Google로 시작하기</Button>
+                <Button variant="outlined" color="primary" href="/register" onClick={this.googlelogin}>Google로 시작하기</Button>
             </div>
         );
     }

@@ -11,10 +11,7 @@ class RegisterMember extends Component{
     add_inputfield() {
         console.log("add_inputfield");
     }
-    
-    
-    
-    
+
     
     render(){
         return(
@@ -24,10 +21,11 @@ class RegisterMember extends Component{
                     <MemberList />
                 </div>
                 <div><IconButton color="primary" aria-label="add">
-                        <AddCircleOutlineRoundedIcon onClick={this.add_inputfield}/>
+                        <AddCircleOutlineRoundedIcon onClick={this.add_inputfield}/> 
                     </IconButton>
+                    등록하기
                 </div>
-                <div><GroupHistory /></div>
+                
             </div>
         );
         

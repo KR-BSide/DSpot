@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Button from '@material-ui/core/Button/Button';
 
-class RegisterGroup extends Component{
+class Register extends Component{
     render(){
         return(
             <div>
@@ -23,4 +23,4 @@ class RegisterGroup extends Component{
     }
 }
 
-export default RegisterGroup;
+export default Register;
