@@ -5,15 +5,22 @@ var map;
 var markers = [];
 var subways = [];
 var totalList = [];
-var nextIndex = 0;
+var spotIndex = 0;
 
 const userLocationArr = [];
 const chktraffic = [];
-const resultdrawArr = [];
+let resultdrawArr = [];
+let resultMarker = [];
+let routDetailArr = [];
 class Map extends Component {
+
 
     componentDidMount() {
         this._getMap();
+    }
+
+    state = {
+        routeDetails : []
     }
 
     _getMap = () => {
@@ -35,9 +42,23 @@ class Map extends Component {
     _getSubway = async ({ dSpotlat, dSpotlng }) => {
         const searchPoiInfo = await this._callSubwayCategoryApi({ dSpotlat, dSpotlng, category: "지하철;" });
         subways = searchPoiInfo.pois.poi;
-        subways.map(async (subway, index) => {
-            await this._callCafeCategoryApi({ dSpotlat: parseFloat(subway.frontLat), dSpotlng: parseFloat(subway.frontLon), category: "스터디카페;카페;", i: index });
+        subways.map((subway, index) => {
+            this._callCafeCategoryApi({ dSpotlat: parseFloat(subway.frontLat), dSpotlng: parseFloat(subway.frontLon), category: "스터디카페;카페;", i: index })
+            .then (result => {
+                if (result) {
+                    const totalCount = result.searchPoiInfo.totalCount;
+                    totalList.push({ totalCount: totalCount, index: index });
+                    subways[index].cafes = result.searchPoiInfo    
+                    if (subways.length == totalList.length) {
+                        totalList.sort(function (a, b) { // 오름차순
+                            return b["totalCount"] - a["totalCount"];
+                        });
+                        this._createDSpot();
+                    }
+                }
+            });
         });
+        
     }
 
     _callSubwayCategoryApi = async ({ dSpotlat, dSpotlng, category }) => {
@@ -79,38 +100,49 @@ class Map extends Component {
             .map(k => esc(k) + '=' + esc(params[k]))
             .join('&');
         const response = await fetch(url + query)
-            .catch(err => console.log(err));
+            .catch(err => {
+                console.log(err);
+                return;
+            });
         const responseOk = response && response.ok;
         if (responseOk) {
-            const result = await response.json();
-            const totalCount = result.searchPoiInfo.totalCount;
-            totalList.push({ totalCount: totalCount, index: i });
-            subways[i].cafes = result.searchPoiInfo
-            if (subways.length == totalList.length) {
-                totalList.sort(function (a, b) { // 오름차순
-                    return b["totalCount"] - a["totalCount"];
-                });
-                this._createDSpot(0);
-            }
+            return await response.json();
         }
     }
 
-    _createDSpot(j) {
-        const index = totalList[j].index
+    _createDSpot() {
+        if (totalList.length <= spotIndex) {
+            alert("다음 검색 위치가 없습니다. 처음부터 다시 시작해주세요."); return;
+        } 
+
+        // 지도 라인 초기화
+        if (spotIndex != 0) 
+            this._initRoute();
+
+        const index = totalList[spotIndex].index
         const marker = new window.Tmapv2.Marker({
             position: new window.Tmapv2.LatLng(subways[index].frontLat, subways[index].frontLon), //Marker의 중심좌표 설정.
             icon: 'http://tmapapis.sktelecom.com/upload/tmap/marker/pin_b_m_b.png', //Marker의 아이콘.
             map: map //Marker가 표시될 Map 설정.
         });
+        resultMarker.push(marker);
         for (var i in userLocationArr)
-            this._routeDSpot(i,j);
+            this._routeDSpot(i)
+            
     }
 
-    _routeDSpot = async(i,j) => {
+    _initRoute = () => {
+        this._resetList(resultMarker);
+        this._resetList(resultdrawArr);
+        this._resetRouteDetail();
+        resultdrawArr = []; 
+        resultMarker = [];
+    }
+    _routeDSpot = async(i) => {
         const startX = userLocationArr[i].lng;
         const startY = userLocationArr[i].lat;
-        const endX = subways[totalList[j].index].frontLon;
-        const endY = subways[totalList[j].index].frontLat;
+        const endX = subways[totalList[spotIndex].index].frontLon;
+        const endY = subways[totalList[spotIndex].index].frontLat;
         const header = {
             appKey : "l7xxbfb4b13f846e43b8b0924bbda1166055"            
         };
@@ -144,11 +176,9 @@ class Map extends Component {
 
     _setRoute = (result) => {
         
-        var tDistance = "총 거리 : " + (result[0].properties.totalDistance / 1000).toFixed(1) + "km,";
-        var tTime = " 총 시간 : " + (result[0].properties.totalTime / 60).toFixed(0) + "분,";
-        var tFare = " 총 요금 : " + result[0].properties.totalFare + "원,";
-        var taxiFare = " 예상 택시 요금 : " + result[0].properties.taxiFare + "원";
-        console.log(tDistance , tTime, tFare, taxiFare);
+        const tDistance = (result[0].properties.totalDistance / 1000).toFixed(1);
+        const tTime = (result[0].properties.totalTime / 60).toFixed(0);
+        this._addRouteDetail({distance : tDistance, time : tTime});
         for (var i in result) {
             var geometry = result[i].geometry;
             var properties = result[i].properties;
@@ -164,23 +194,15 @@ class Map extends Component {
                         latlng.x); 
                     sectionInfos.push(convertChange);
                 }
-
                 const poli = new window.Tmapv2.Polyline({
                     path : sectionInfos,
                     strokeColor : "#DD0000",
                     strokeWeight : 6,
                     map : map
                 });
-              /*  new window.Tmapv2.Polyline({
-                    path: convertPoint,
-                    strokeColor: "#ff0000", 
-                    strokeWeight: 6,
-                    map: map
-                });
-*/
-                //this._drawLine(sectionInfos, geometry.traffic);
+                resultdrawArr.push(poli);  
             } else {
-		
+        
                 var markerImg = "";
                 var pType = "";
 
@@ -207,157 +229,19 @@ class Map extends Component {
                     markerImage : markerImg,
                     lng : latlon.x,
                     lat : latlon.y
-                   // pointType : pType
-                };
-                // 마커 추가
-                //addMarker(routeInfoObj);
-                
-            }
-
-            
-        }
+                };                
+            }  
+        }    
     }
 
-    _drawLine = (arrPoint, traffic) => {
-        var polyline_;
-        
-        if (chktraffic.length != 0) {
-
-            // 교통정보 혼잡도를 체크
-            // strokeColor는 교통 정보상황에 다라서 변화
-            // traffic :  0-정보없음, 1-원활, 2-서행, 3-지체, 4-정체  (black, green, yellow, orange, red)
-
-            var lineColor = "";
-            if (traffic != "0") {
-                if (traffic.length == 0) { //length가 0인것은 교통정보가 없으므로 검은색으로 표시
-
-                    lineColor = "#06050D";
-                    //라인그리기[S]
-                    polyline_ = new window.Tmapv2.Polyline({
-                        path : arrPoint,
-                        strokeColor : lineColor,
-                        strokeWeight : 6,
-                        map : map
-                    });
-                    resultdrawArr.push(polyline_);
-                    //라인그리기[E]
-                } else { //교통정보가 있음
-
-                    if (traffic[0][0] != 0) { //교통정보 시작인덱스가 0이 아닌경우
-                        var trafficObject = "";
-                        var tInfo = [];
-
-                        for (var z = 0; z < traffic.length; z++) {
-                            trafficObject = {
-                                "startIndex" : traffic[z][0],
-                                "endIndex" : traffic[z][1],
-                                "trafficIndex" : traffic[z][2],
-                            };
-                            tInfo.push(trafficObject)
-                        }
-
-                        var noInfomationPoint = [];
-
-                        for (var p = 0; p < tInfo[0].startIndex; p++) {
-                            noInfomationPoint.push(arrPoint[p]);
-                        }
-
-                        //라인그리기[S]
-                        polyline_ = new window.Tmapv2.Polyline({
-                            path : noInfomationPoint,
-                            strokeColor : "#06050D",
-                            strokeWeight : 6,
-                            map : map
-                        });
-                        //라인그리기[E]
-                        resultdrawArr.push(polyline_);
-
-                        for (var x = 0; x < tInfo.length; x++) {
-                            var sectionPoint = []; //구간선언
-
-                            for (var y = tInfo[x].startIndex; y <= tInfo[x].endIndex; y++) {
-                                sectionPoint.push(arrPoint[y]);
-                            }
-
-                            if (tInfo[x].trafficIndex == 0) {
-                                lineColor = "#06050D";
-                            } else if (tInfo[x].trafficIndex == 1) {
-                                lineColor = "#61AB25";
-                            } else if (tInfo[x].trafficIndex == 2) {
-                                lineColor = "#FFFF00";
-                            } else if (tInfo[x].trafficIndex == 3) {
-                                lineColor = "#E87506";
-                            } else if (tInfo[x].trafficIndex == 4) {
-                                lineColor = "#D61125";
-                            }
-
-                            //라인그리기[S]
-                            polyline_ = new window.Tmapv2.Polyline({
-                                path : sectionPoint,
-                                strokeColor : lineColor,
-                                strokeWeight : 6,
-                                map : map
-                            });
-                            //라인그리기[E]
-                            resultdrawArr.push(polyline_);
-                        }
-                    } else { //0부터 시작하는 경우
-
-                        var trafficObject = "";
-                        var tInfo = [];
-
-                        for (var z = 0; z < traffic.length; z++) {
-                            trafficObject = {
-                                "startIndex" : traffic[z][0],
-                                "endIndex" : traffic[z][1],
-                                "trafficIndex" : traffic[z][2],
-                            };
-                            tInfo.push(trafficObject)
-                        }
-
-                        for (var x = 0; x < tInfo.length; x++) {
-                            var sectionPoint = []; //구간선언
-
-                            for (var y = tInfo[x].startIndex; y <= tInfo[x].endIndex; y++) {
-                                sectionPoint.push(arrPoint[y]);
-                            }
-
-                            if (tInfo[x].trafficIndex == 0) {
-                                lineColor = "#06050D";
-                            } else if (tInfo[x].trafficIndex == 1) {
-                                lineColor = "#61AB25";
-                            } else if (tInfo[x].trafficIndex == 2) {
-                                lineColor = "#FFFF00";
-                            } else if (tInfo[x].trafficIndex == 3) {
-                                lineColor = "#E87506";
-                            } else if (tInfo[x].trafficIndex == 4) {
-                                lineColor = "#D61125";
-                            }
-
-                            //라인그리기[S]
-                            polyline_ = new window.Tmapv2.Polyline({
-                                path : sectionPoint,
-                                strokeColor : lineColor,
-                                strokeWeight : 6,
-                                map : map
-                            });
-                            //라인그리기[E]
-                            resultdrawArr.push(polyline_);
-                        }
-                    }
-                }
-            } else {
-
-            }
-        } else {
-            polyline_ = new window.Tmapv2.Polyline({
-                path : arrPoint,
-                strokeColor : "#DD0000",
-                strokeWeight : 6,
-                map : map
-            });
-            resultdrawArr.push(polyline_);
-        }
+    _addRouteDetail = ({distance, time}) => {
+        const {routeDetails} = this.state;
+        this.setState({
+            routeDetails : routeDetails.concat({
+                distance : distance,
+                time : time
+            })
+        });
     }
 
     _getLocation = (locationObj) => {
@@ -383,37 +267,73 @@ class Map extends Component {
     }
     
     _nextSpot = () => {
-        nextIndex++;
-        if (totalList.length <= nextIndex) {
-            alert("다른역 없습니다.");
-            return;
-        }
-
-        this._createDSpot(nextIndex);
+        spotIndex++ 
+        this._createDSpot();
     }
 
-    _last
 
+    _resetMap = () => {
+        this._resetList(resultMarker);
+        this._resetList(resultdrawArr);
+        this._resetList(markers);
+        this._resetRouteDetail();
+        resultMarker = [];
+        resultdrawArr = [];
+        markers = [];
+        spotIndex=0;
+    }
+
+    _resetList = (list) => {
+        if (list.length > 0) {
+            for (var i = 0; i < list.length; i++)
+                list[i].setMap(null);
+        }
+    }
+
+    _resetRouteDetail = () => {
+        const {routeDetails} = this.state;
+        this.setState({
+            routeDetails : []
+        });
+    }
     render() {
+        const {routeDetails} = this.state;
+        const list = routeDetails.map(
+            ({distance, time}, index) => (
+            <li key={index}>
+                <p>
+                    <span>거리 : </span>
+                    <span>{distance}km</span>
+                </p>
+                <p>
+                    <span>소요시간 : </span>
+                    <span>{time}분</span>
+                </p>
+            </li>
+            )
+        );
+
         return (
             <div>
                 <div id="map_div"></div>
                 <button onClick={() => this._getSpot()}>중간지점</button>
                 <button onClick={() => this._nextSpot()}>다른 역 찾기</button>
+                <button onClick={() => this._resetMap()}>처음부터 다시</button>
+                <hr/>
+                <div>
+                    <ul>{list}</ul>
+                </div>
             </div>
         )
     };
 }
 
 function getLonlat(e) {
-    //Marker 객체 생성.
     addMarker({ lat : e.latLng.lat() , lng : e.latLng.lng()});
     userLocationArr.push({ lat : e.latLng.lat() , lng : e.latLng.lng()});
-
 }
 
 function addMarker(infoObj) {
-    //Marker 객체 생성.
     if (!infoObj.markerImage) {
         infoObj.markerImage = "http://tmapapis.sktelecom.com/upload/tmap/marker/pin_b_m_a.png"
     }
